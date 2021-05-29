@@ -33,6 +33,10 @@ class Coach:
 		# Initialize network
 		self.net = e4e(self.opts).to(self.device)
 
+		# Estimate latent_avg via dense sampling if latent_avg is not available
+		if self.net.latent_avg is None:
+			self.net.latent_avg = self.net.decoder.mean_latent(int(1e5))[0].detach()
+
 		# get the image corresponding to the latent average
 		self.avg_image = self.net(self.net.latent_avg.unsqueeze(0),
 								  input_code=True,
@@ -274,7 +278,7 @@ class Coach:
 
 	def configure_datasets(self):
 		if self.opts.dataset_type not in data_configs.DATASETS.keys():
-			Exception('{} is not a valid dataset_type'.format(self.opts.dataset_type))
+			raise Exception('{} is not a valid dataset_type'.format(self.opts.dataset_type))
 		print('Loading dataset for {}'.format(self.opts.dataset_type))
 		dataset_args = data_configs.DATASETS[self.opts.dataset_type]
 		transforms_dict = dataset_args['transforms'](self.opts).get_transforms()
